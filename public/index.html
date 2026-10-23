@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Rattana Social Posting v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b3e;--navy-mid:#1a2f5e;--navy-light:#243b73;--gold:#c9a84c;--gold-light:#e8c86a;
+  --success:#2ecc71;--danger:#e74c3c;--warning:#f39c12;--info:#3498db;
+  --bg:#f4f6fb;--text:#0d1b3e;--card-bg:#ffffff;--border:#dde3f0;--muted:#6b7896;--row-alt:#fafbfd;
+  --space-xs:4px;--space-sm:8px;--space-md:16px;--space-lg:24px;--space-xl:32px;
+  --radius-sm:6px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 2px 8px rgba(0,0,0,.08);--shadow-lg:0 8px 24px rgba(13,27,62,.12);--shadow-gold:0 4px 12px rgba(201,168,76,.35);
+  --fb:#1877f2;--tt:#111111;--line:#06c755;
+}
+body.dark{--bg:#0a1020;--text:#e8eaf0;--card-bg:#111c35;--border:#243b73;--muted:#8a98b8;--row-alt:#0f1830}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;font-size:14px;line-height:1.5;min-height:100dvh;overflow-x:hidden;background:var(--bg);color:var(--text);transition:background .25s,color .25s}
+button{font-family:inherit;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+input,select,textarea{font-family:inherit;font-size:16px}
+a{color:var(--info)}
+
+.topbar{position:sticky;top:0;z-index:100}
+header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;padding-top:max(12px,env(safe-area-inset-top))}
+.logo-mark{width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}
+.logo-text{font-weight:700;letter-spacing:1.5px;font-size:18px;color:#fff;white-space:nowrap}
+.logo-text span{color:var(--gold)}
+.ver{font-size:11px;color:rgba(255,255,255,.55);margin-left:4px;letter-spacing:0}
+.hdr-sp{flex:1}
+.icon-btn{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.2);width:38px;height:38px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s;flex-shrink:0}
+.icon-btn:hover{background:rgba(255,255,255,.12)}
+.status-pill{font-size:12px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;white-space:nowrap;cursor:pointer}
+@media(max-width:560px){.status-pill{display:none}.logo-text{font-size:15px}}
+
+.tab-nav{display:flex;background:var(--navy);border-bottom:3px solid var(--gold);padding:0 8px;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn{background:transparent;border:none;color:rgba(255,255,255,.6);padding:12px 18px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0;transition:all .18s;margin-bottom:-3px;border-radius:var(--radius-sm) var(--radius-sm) 0 0}
+.tab-btn:hover{color:#fff;background:rgba(255,255,255,.06)}
+.tab-btn.active{color:var(--navy);background:var(--gold);border-bottom-color:var(--gold);font-weight:700;box-shadow:0 -2px 8px rgba(201,168,76,.3)}
+.tab-btn .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--danger);color:#fff;font-size:11px}
+
+.content{padding:12px;max-width:1200px;margin:0 auto;width:100%}
+@media(min-width:640px){.content{padding:16px}}
+@media(min-width:1024px){.content{padding:20px}}
+.tab-pane{display:none;animation:fadeIn .2s ease}
+.tab-pane.active{display:block}
+
+.card{background:var(--card-bg);border-radius:var(--radius-md);border:1px solid var(--border);box-shadow:var(--shadow-md)}
+.card-gold{border-top:3px solid var(--gold)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border);background:linear-gradient(to right,rgba(201,168,76,.07),transparent);flex-wrap:wrap}
+.card-head h3{font-size:15px;font-weight:700}
+.card-body{padding:16px}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;min-height:40px;transition:opacity .15s,transform .1s;text-decoration:none}
+.btn:hover{opacity:.88}.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+body.dark .btn-primary{background:var(--navy-light);border-color:var(--navy-light)}
+.btn-gold{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.btn-gold:hover{background:var(--gold-light)}
+.btn-outline{background:transparent;color:var(--text);border-color:var(--border)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-fb{background:var(--fb);color:#fff}.btn-tt{background:var(--tt);color:#fff}.btn-line{background:var(--line);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px;min-height:30px}
+.btn-lg{padding:14px 24px;font-size:16px;min-height:52px;border-radius:var(--radius-md)}
+.btn-block{width:100%;justify-content:center}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-ok{background:#e8f7ee;color:#1e8449}.badge-warn{background:#fef3d7;color:#a87800}
+.badge-danger{background:#ffd5d0;color:#c0392b}.badge-info{background:#e3f0fd;color:#1a6fb8}
+.badge-gold{background:rgba(201,168,76,.18);color:var(--text);border:1px solid rgba(201,168,76,.4)}
+body.dark .badge-ok{background:#1a3a25;color:#7be0a3}body.dark .badge-warn{background:#3a2e15;color:#e8c86a}
+body.dark .badge-danger{background:#3a1a17;color:#ff8a7e}body.dark .badge-info{background:#14304d;color:#8cc4f5}
+
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl{width:100%;border-collapse:collapse;min-width:820px}
+.tbl thead{background:var(--navy);color:#fff}
+.tbl thead th{padding:10px;text-align:left;font-size:12px;font-weight:600;white-space:nowrap;border-bottom:2px solid var(--gold);user-select:none}
+.tbl thead th[data-key]{cursor:pointer}
+.tbl thead th[data-key]:hover{background:var(--navy-mid)}
+.tbl thead th .sort-ind{font-size:10px;color:var(--gold);margin-left:4px;font-weight:700}
+.tbl tbody tr{border-bottom:1px solid var(--border)}
+.tbl tbody tr:nth-child(even){background:var(--row-alt)}
+.tbl tbody tr:hover{background:rgba(201,168,76,.07)}
+.tbl td{padding:10px;font-size:13px;vertical-align:top}
+.tbl .empty-row td{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px}
+
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
+.input{height:44px;padding:0 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--card-bg);color:var(--text);font-size:16px;outline:none;width:100%;transition:border-color .15s}
+.input:focus{border-color:var(--gold)}
+textarea.input{height:auto;padding:10px 14px;resize:vertical;line-height:1.55}
+select.input{cursor:pointer}
+.hint{font-size:12px;color:var(--muted)}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,27,62,.65);z-index:9000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card-bg);border-radius:var(--radius-lg);max-width:480px;width:100%;max-height:92dvh;overflow-y:auto;border-top:4px solid var(--gold);animation:slideUp .22s ease}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-size:16px;font-weight:700}
+.modal-close{background:transparent;border:none;font-size:24px;color:var(--muted);padding:4px 8px;border-radius:var(--radius-sm);line-height:1}
+.modal-body{padding:20px}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+.toast{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));right:16px;padding:12px 20px;border-radius:var(--radius-md);color:#fff;z-index:9999;animation:slideIn .3s ease;font-weight:500;box-shadow:var(--shadow-lg);max-width:min(90vw,460px);font-size:13px}
+.toast-success{background:#1e9e57}.toast-error{background:var(--danger)}
+.toast-warning{background:var(--warning);color:var(--navy)}.toast-info{background:var(--navy-mid);border-left:3px solid var(--gold)}
+
+#spinner{display:none;position:fixed;inset:0;background:rgba(13,27,62,.6);align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(3px)}
+.spinner-box{background:var(--card-bg);color:var(--text);border-radius:16px;padding:32px 40px;text-align:center;border-top:4px solid var(--gold);min-width:240px}
+.spinner-ring{width:48px;height:48px;border:5px solid #dde3f0;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+#loadingBar{position:fixed;top:0;left:0;height:3px;background:var(--gold);width:0;transition:width .4s;z-index:10000}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.flex{display:flex}.flex-between{display:flex;align-items:center;justify-content:space-between}.gap-8{gap:8px}.wrap{flex-wrap:wrap}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mb-12{margin-bottom:12px}
+.txt-sm{font-size:12px}.txt-muted{color:var(--muted)}.txt-danger{color:var(--danger)}.txt-bold{font-weight:700}
+.hidden{display:none!important}
+
+#backToTop{position:fixed;bottom:max(24px,calc(16px + env(safe-area-inset-bottom)));right:max(16px,calc(12px + env(safe-area-inset-right)));background:var(--gold);color:var(--navy);border:none;border-radius:50%;width:46px;height:46px;display:none;align-items:center;justify-content:center;box-shadow:var(--shadow-gold);z-index:90;font-size:18px;font-weight:700}
+#backToTop.show{display:flex}
+
+/* ── App specific ── */
+.compose-grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:960px){.compose-grid{grid-template-columns:3fr 2fr;align-items:start}}
+.stack>*+*{margin-top:16px}
+.cap-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+details.overrides{margin-top:12px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px}
+details.overrides summary{cursor:pointer;font-weight:600;font-size:13px}
+details.overrides .field{margin-top:10px}
+
+.dropzone{border:2px dashed var(--border);border-radius:var(--radius-md);padding:26px 16px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
+.dropzone.drag,.dropzone:hover{border-color:var(--gold);background:rgba(201,168,76,.06)}
+.dropzone .big{font-size:30px}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px}
+.thumb{position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;background:#000;border:1px solid var(--border)}
+.thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .rm{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:14px}
+.thumb .sz{position:absolute;left:4px;bottom:4px;font-size:10px;background:rgba(0,0,0,.6);color:#fff;padding:1px 5px;border-radius:4px}
+
+.pf{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;color:#fff;font-size:12px;font-weight:800;flex-shrink:0;line-height:1}
+.pf-facebook{background:var(--fb)}.pf-tiktok{background:var(--tt);box-shadow:inset -2px 0 #fe2c55,inset 2px 0 #25f4ee}.pf-line{background:var(--line)}
+body.dark .pf-tiktok{background:#000;outline:1px solid #333}
+
+.tgroup{border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:12px;overflow:hidden}
+.tgroup-head{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(201,168,76,.07);font-weight:700}
+.tgroup-head .sp{flex:1}
+.acc-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--border);min-height:52px}
+label.acc-row{cursor:pointer}
+label.acc-row:hover{background:rgba(201,168,76,.06)}
+.acc-row input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);flex-shrink:0}
+.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted)}
+.acc-info{flex:1;min-width:0}
+.acc-name{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-row.off{opacity:.5}
+.empty{padding:18px 12px;text-align:center;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+
+.radio-row{display:flex;gap:8px;flex-wrap:wrap}
+.radio-pill{flex:1;min-width:130px;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-weight:600;min-height:44px}
+.radio-pill:has(input:checked){border-color:var(--gold);background:rgba(201,168,76,.1)}
+.radio-pill input{accent-color:var(--gold);width:18px;height:18px}
+
+.issues{margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.issue{font-size:13px;padding:8px 12px;border-radius:var(--radius-sm);border-left:3px solid}
+.issue.err{background:rgba(231,76,60,.08);border-color:var(--danger)}
+.issue.warn{background:rgba(243,156,18,.1);border-color:var(--warning)}
+.progress{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:12px}
+.progress>div{height:100%;background:var(--gold);width:0;transition:width .2s}
+
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:13px;min-height:34px}
+.chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+body.dark .chip.active{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.search{flex:1;min-width:200px;height:40px;border-radius:999px;padding:0 16px}
+.cap-cell{max-width:320px;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.res-line{display:flex;gap:6px;align-items:flex-start;font-size:12px;padding:3px 0;min-width:240px}
+.res-line .pf{width:18px;height:18px;font-size:10px;border-radius:4px}
+.res-msg{color:var(--danger);font-size:11px;word-break:break-word}
+.res-note{color:var(--muted);font-size:11px}
+.mini-thumbs{display:flex;gap:4px;flex-wrap:wrap;max-width:140px}
+.mini-thumbs img,.mini-thumbs .vid{width:40px;height:40px;border-radius:4px;object-fit:cover;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+
+.acc-grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:900px){.acc-grid{grid-template-columns:repeat(3,1fr)}}
+.set-grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:900px){.set-grid{grid-template-columns:repeat(2,1fr)}}
+.copy-row{display:flex;gap:8px}
+.copy-row .input{font-size:13px;font-family:Consolas,monospace}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px}
+.kv:last-child{border-bottom:none}
+ol.steps{padding-left:20px;font-size:13px;line-height:1.8}
+code{font-family:Consolas,monospace;font-size:12px;background:rgba(201,168,76,.15);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div id="loadingBar"></div>
+
+<div class="topbar">
+<header>
+  <div class="logo-mark">R</div>
+  <div class="logo-text">RATTANA <span>SOCIAL</span><span class="ver">v1.0</span></div>
+  <div class="hdr-sp"></div>
+  <div class="status-pill" id="statusPill" onclick="switchTab('settings')">…</div>
+  <button class="icon-btn" id="btnRefresh" title="รีเฟรช" onclick="refreshData()">⟳</button>
+  <button class="icon-btn" id="btnDark" title="โหมดมืด" onclick="toggleDark()">🌙</button>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="compose" onclick="switchTab('compose')">✍️ สร้างโพสต์</button>
+  <button class="tab-btn" data-tab="posts" onclick="switchTab('posts')">🗓️ โพสต์ &amp; ตั้งเวลา<span class="cnt hidden" id="cntRunning"></span></button>
+  <button class="tab-btn" data-tab="accounts" onclick="switchTab('accounts')">👥 บัญชี</button>
+  <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ ตั้งค่า</button>
+</nav>
+</div>
+
+<main class="content">
+
+  <!-- ===== Compose ===== -->
+  <section class="tab-pane active" id="tab-compose">
+    <div class="compose-grid">
+      <div class="stack">
+        <div class="card card-gold">
+          <div class="card-head"><h3>📝 ข้อความ</h3><span class="txt-sm txt-muted" id="capCount">0 ตัวอักษร</span></div>
+          <div class="card-body">
+            <textarea id="caption" class="input" rows="8" placeholder="เขียนแคปชั่นที่นี่… ใช้กับทุกแพลตฟอร์ม"></textarea>
+            <div class="cap-meta" id="capMeta"></div>
+            <details class="overrides" id="overrides">
+              <summary>✏️ ปรับข้อความแยกตามแพลตฟอร์ม (ไม่บังคับ — เว้นว่าง = ใช้ข้อความหลัก)</summary>
+              <div class="field"><label><span class="pf pf-facebook">f</span> Facebook</label><textarea class="input cap-ov" data-p="facebook" rows="3"></textarea></div>
+              <div class="field"><label><span class="pf pf-tiktok">♪</span> TikTok (สูงสุด 2,200)</label><textarea class="input cap-ov" data-p="tiktok" rows="3"></textarea></div>
+              <div class="field"><label><span class="pf pf-line">L</span> LINE OA (สูงสุด 5,000)</label><textarea class="input cap-ov" data-p="line" rows="3"></textarea></div>
+            </details>
+          </div>
+        </div>
+
+        <div class="card card-gold">
+          <div class="card-head"><h3>📎 รูปภาพ / วิดีโอ</h3><span class="txt-sm txt-muted">รูปสูงสุด 10 รูป หรือ วิดีโอ 1 ไฟล์</span></div>
+          <div class="card-body">
+            <div class="dropzone" id="dropzone">
+              <div class="big">⬆️</div>
+              <div class="txt-bold">ลากไฟล์มาวาง หรือคลิกเพื่อเลือก</div>
+              <div class="hint">JPG / PNG / MP4 / MOV — TikTok ต้องเป็นวิดีโอ</div>
+            </div>
+            <input type="file" id="fileInput" accept="image/*,video/*" multiple hidden>
+            <div class="thumbs" id="thumbs"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card card-gold">
+          <div class="card-head"><h3>🎯 โพสต์ไปที่</h3><span class="badge badge-gold" id="selCount">0 บัญชี</span></div>
+          <div class="card-body" id="targetList"></div>
+        </div>
+
+        <div class="card card-gold hidden" id="ttOptions">
+          <div class="card-head"><h3><span class="pf pf-tiktok">♪</span> ตัวเลือก TikTok</h3></div>
+          <div class="card-body">
+            <div class="field">
+              <label>วิธีส่ง</label>
+              <select class="input" id="ttMode">
+                <option value="direct">โพสต์ทันที (Direct Post)</option>
+                <option value="draft">ส่งเข้าแอป TikTok เป็นดราฟต์ ให้กดโพสต์เอง</option>
+              </select>
+            </div>
+            <div class="field" id="ttPrivacyField">
+              <label>ใครเห็นได้</label>
+              <select class="input" id="ttPrivacy">
+                <option value="PUBLIC_TO_EVERYONE">ทุกคน (สาธารณะ)</option>
+                <option value="FOLLOWER_OF_CREATOR">ผู้ติดตาม</option>
+                <option value="MUTUAL_FOLLOW_FRIENDS">เพื่อน (ติดตามกันและกัน)</option>
+                <option value="SELF_ONLY">เฉพาะฉัน</option>
+              </select>
+            </div>
+            <label class="flex gap-8" style="align-items:center;cursor:pointer"><input type="checkbox" id="ttComments" checked style="width:18px;height:18px;accent-color:var(--gold)"> อนุญาตให้คอมเมนต์</label>
+          </div>
+        </div>
+
+        <div class="card card-gold">
+          <div class="card-head"><h3>⏰ เวลาโพสต์</h3></div>
+          <div class="card-body">
+            <div class="radio-row">
+              <label class="radio-pill"><input type="radio" name="when" value="now" checked> โพสต์ทันที</label>
+              <label class="radio-pill"><input type="radio" name="when" value="later"> ตั้งเวลา</label>
+            </div>
+            <div class="mt-12 hidden" id="scheduleBox">
+              <input type="datetime-local" class="input" id="scheduleAt">
+              <div class="hint mt-8" id="scheduleTh"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="issues" id="issues"></div>
+        <button class="btn btn-gold btn-lg btn-block mt-16" id="btnSubmit" onclick="submitPost()">🚀 โพสต์เลย</button>
+        <div class="progress hidden" id="uploadProg"><div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Posts ===== -->
+  <section class="tab-pane" id="tab-posts">
+    <div class="card card-gold">
+      <div class="filter-bar">
+        <div class="chips" id="statusChips"></div>
+        <input class="input search" id="postSearch" placeholder="🔍 ค้นหาข้อความ / ชื่อบัญชี…" oninput="state.search=this.value;renderPosts()">
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl" id="postTbl">
+          <thead><tr>
+            <th data-key="when" data-type="date">วันที่ / เวลา <span class="sort-ind"></span></th>
+            <th>ข้อความ</th>
+            <th>สื่อ</th>
+            <th>ผลลัพธ์แต่ละบัญชี</th>
+            <th data-key="status" data-type="str">สถานะ <span class="sort-ind"></span></th>
+            <th>จัดการ</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Accounts ===== -->
+  <section class="tab-pane" id="tab-accounts">
+    <div class="acc-grid">
+      <div class="card card-gold">
+        <div class="card-head"><h3><span class="pf pf-facebook">f</span> Facebook Pages</h3><span class="badge badge-gold" id="cnt-facebook">0</span></div>
+        <div class="card-body">
+          <a class="btn btn-fb btn-block" href="/auth/facebook/start">เชื่อมต่อด้วย Facebook</a>
+          <button class="btn btn-outline btn-block mt-8" onclick="openModal('fbModal')">วาง User Token เอง</button>
+          <div class="hint mt-8">ระบบจะดึงทุกเพจที่คุณเป็นแอดมินมาให้อัตโนมัติ — ล็อกอินซ้ำด้วยบัญชี Facebook อื่นเพื่อเพิ่มเพจได้</div>
+        </div>
+        <div id="acc-facebook"></div>
+      </div>
+      <div class="card card-gold">
+        <div class="card-head"><h3><span class="pf pf-tiktok">♪</span> TikTok</h3><span class="badge badge-gold" id="cnt-tiktok">0</span></div>
+        <div class="card-body">
+          <a class="btn btn-tt btn-block" href="/auth/tiktok/start">เชื่อมต่อบัญชี TikTok</a>
+          <div class="hint mt-8">เพิ่มทีละบัญชี — ถ้าจะเพิ่มบัญชีถัดไป ให้ออกจากระบบ tiktok.com ในเบราว์เซอร์ก่อน หรือสลับบัญชีในหน้าล็อกอิน</div>
+        </div>
+        <div id="acc-tiktok"></div>
+      </div>
+      <div class="card card-gold">
+        <div class="card-head"><h3><span class="pf pf-line">L</span> LINE OA</h3><span class="badge badge-gold" id="cnt-line">0</span></div>
+        <div class="card-body">
+          <button class="btn btn-line btn-block" onclick="openModal('lineModal')">+ เพิ่ม LINE OA</button>
+          <div class="hint mt-8">ใช้ Channel Access Token (long-lived) จาก LINE Developers Console — โพสต์จะส่งแบบ Broadcast ถึงเพื่อนทุกคน</div>
+        </div>
+        <div id="acc-line"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Settings ===== -->
+  <section class="tab-pane" id="tab-settings">
+    <div class="set-grid">
+      <div class="card card-gold">
+        <div class="card-head"><h3><span class="pf pf-facebook">f</span> Facebook App</h3></div>
+        <div class="card-body">
+          <div class="field"><label>App ID</label><input class="input" id="sFbAppId" autocomplete="off"></div>
+          <div class="field"><label>App Secret</label><input class="input" id="sFbAppSecret" type="password" autocomplete="new-password"></div>
+          <div class="field"><label>Valid OAuth Redirect URI (ใส่ใน Facebook Login → Settings)</label>
+            <div class="copy-row"><input class="input" id="rFb" readonly><button class="btn btn-outline" onclick="copyVal('rFb')">คัดลอก</button></div></div>
+        </div>
+      </div>
+      <div class="card card-gold">
+        <div class="card-head"><h3><span class="pf pf-tiktok">♪</span> TikTok App</h3></div>
+        <div class="card-body">
+          <div class="field"><label>Client Key</label><input class="input" id="sTtKey" autocomplete="off"></div>
+          <div class="field"><label>Client Secret</label><input class="input" id="sTtSecret" type="password" autocomplete="new-password"></div>
+          <div class="field"><label>Redirect URI (ใส่ใน Login Kit → Desktop)</label>
+            <div class="copy-row"><input class="input" id="rTt" readonly><button class="btn btn-outline" onclick="copyVal('rTt')">คัดลอก</button></div></div>
+        </div>
+      </div>
+      <div class="card card-gold">
+        <div class="card-head"><h3><span class="pf pf-line">L</span> สื่อสำหรับ LINE</h3></div>
+        <div class="card-body">
+          <div id="mediaStatus"></div>
+          <div class="field mt-12"><label>Public Media URL (ไม่บังคับ)</label>
+            <input class="input" id="sPublicBase" placeholder="https://media.example.com">
+            <span class="hint">ถ้ามีโดเมน/อุโมงค์ถาวรที่ชี้มาที่ port 3211 ให้ใส่ที่นี่ — เว้นว่าง = ใช้ Cloudflare quick tunnel อัตโนมัติ</span></div>
+          <button class="btn btn-outline" onclick="startTunnel()">🔁 เปิด Tunnel อีกครั้ง</button>
+        </div>
+      </div>
+      <div class="card card-gold">
+        <div class="card-head"><h3>💾 บันทึก</h3></div>
+        <div class="card-body">
+          <p class="txt-sm txt-muted mb-12">ช่อง Secret ที่เว้นว่างไว้จะใช้ค่าเดิมที่บันทึกไว้ ข้อมูลทั้งหมดเก็บในเครื่องนี้ที่โฟลเดอร์ <code>data/</code></p>
+          <button class="btn btn-gold btn-lg btn-block" onclick="saveSettings()">บันทึกการตั้งค่า</button>
+          <p class="txt-sm txt-muted mt-12">วิธีสมัคร Developer App แต่ละแพลตฟอร์ม ดูใน <code>README.md</code></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- LINE modal -->
+<div class="modal-overlay" id="lineModal">
+  <div class="modal">
+    <div class="modal-head"><h3>เพิ่ม LINE OA</h3><button class="modal-close" onclick="closeModal('lineModal')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>ชื่อที่แสดงในแอป (ไม่บังคับ)</label><input class="input" id="lineName" placeholder="ดึงจาก LINE อัตโนมัติ"></div>
+      <div class="field"><label>Channel Access Token (long-lived)</label><textarea class="input" id="lineToken" rows="4" style="font-size:13px;font-family:Consolas,monospace"></textarea></div>
+      <p class="hint">LINE Developers → Provider → Channel (Messaging API) → แท็บ Messaging API → Channel access token → Issue</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('lineModal')">ยกเลิก</button><button class="btn btn-line" onclick="addLine()">ตรวจสอบและเพิ่ม</button></div>
+  </div>
+</div>
+
+<!-- FB token modal -->
+<div class="modal-overlay" id="fbModal">
+  <div class="modal">
+    <div class="modal-head"><h3>นำเข้าเพจด้วย User Access Token</h3><button class="modal-close" onclick="closeModal('fbModal')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>User Access Token</label><textarea class="input" id="fbToken" rows="4" style="font-size:13px;font-family:Consolas,monospace"></textarea></div>
+      <p class="hint">สร้างจาก Graph API Explorer โดยเลือกแอปของคุณ และติ๊กสิทธิ์ pages_show_list, pages_manage_posts, pages_read_engagement — ถ้าตั้ง App ID/Secret ไว้ ระบบจะแปลงเป็น token แบบไม่หมดอายุให้</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('fbModal')">ยกเลิก</button><button class="btn btn-fb" onclick="addFbToken()">นำเข้าเพจ</button></div>
+  </div>
+</div>
+
+<div id="spinner"><div class="spinner-box"><div class="spinner-ring"></div><p id="spinnerMsg">กำลังโหลด…</p></div></div>
+<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const PLATFORMS = {
+  facebook: { label: 'Facebook', icon: 'f' },
+  tiktok:   { label: 'TikTok',   icon: '♪' },
+  line:     { label: 'LINE OA',  icon: 'L' },
+};
+const STATUS = {
+  scheduled: ['ตั้งเวลาไว้', 'badge-info'],
+  queued:    ['รอคิว', 'badge-warn'],
+  running:   ['กำลังโพสต์', 'badge-warn'],
+  done:      ['สำเร็จ', 'badge-ok'],
+  partial:   ['สำเร็จบางส่วน', 'badge-warn'],
+  failed:    ['ล้มเหลว', 'badge-danger'],
+  missed:    ['พลาดเวลา', 'badge-danger'],
+};
+const RESULT_ICON = { pending: '⏳', running: '🔄', success: '✅', failed: '❌' };
+const MB = 1024 * 1024;
+
+const state = { accounts: [], posts: [], status: {}, settings: {}, files: [], selected: new Set(), postFilter: 'all', search: '' };
+const sortState = { key: 'when', dir: 'desc' };
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+/* ---------- Thai formatting ---------- */
+function formatThaiDate(input) {
+  if (!input) return '-';
+  const d = input instanceof Date ? input : new Date(input);
+  if (isNaN(d)) return '-';
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear() + 543}`;
+}
+function formatThaiTime(input) {
+  if (!input) return '-';
+  const d = input instanceof Date ? input : new Date(input);
+  if (isNaN(d)) return '-';
+  return `${String(d.getHours()).padStart(2, '0')}.${String(d.getMinutes()).padStart(2, '0')}`;
+}
+const formatThaiDateTime = i => `${formatThaiDate(i)} ${formatThaiTime(i)}`;
+const fmtSize = b => b >= MB ? `${(b / MB).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
+const fmtNum = n => Number(n || 0).toLocaleString('th-TH');
+
+/* ---------- UI helpers ---------- */
+const showSpinner = (m = 'กำลังโหลด…') => { $('#spinnerMsg').textContent = m; $('#spinner').style.display = 'flex'; };
+const hideSpinner = () => { $('#spinner').style.display = 'none'; };
+const setLoading = on => { $('#loadingBar').style.width = on ? '85%' : '0'; };
+function showToast(msg, type = 'info', ms = 3800) {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), ms);
+}
+const openModal = id => $('#' + id).classList.add('open');
+const closeModal = id => $('#' + id).classList.remove('open');
+function copyVal(id) {
+  const el = $('#' + id);
+  navigator.clipboard?.writeText(el.value).then(() => showToast('คัดลอกแล้ว', 'success'), () => { el.select(); document.execCommand('copy'); });
+}
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const on = document.body.classList.contains('dark');
+  $('#btnDark').textContent = on ? '☀️' : '🌙';
+  store.set('rsp.dark', on);
+}
+function switchTab(tab) {
+  $$('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  $$('.tab-pane').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
+  store.set('rsp.tab', tab);
+  window.scrollTo({ top: 0 });
+}
+window.addEventListener('scroll', () => $('#backToTop').classList.toggle('show', window.scrollY > 300));
+
+async function api(path, { method = 'GET', json } = {}) {
+  const opts = { method, headers: { 'x-app': 'rattana' } };
+  if (json !== undefined) { opts.body = JSON.stringify(json); opts.headers['Content-Type'] = 'application/json'; }
+  const r = await fetch(path, opts);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+  return j;
+}
+
+/* ---------- data ---------- */
+const accById = id => state.accounts.find(a => a.id === id);
+
+async function loadAccounts() { state.accounts = await api('/api/accounts'); renderAccounts(); renderTargets(); }
+async function loadPosts() { state.posts = await api('/api/posts'); renderPosts(); }
+async function loadStatus() { state.status = await api('/api/status'); renderStatus(); renderIssues(); }
+async function loadSettings() { state.settings = await api('/api/settings'); renderSettings(); }
+async function loadData() {
+  setLoading(true);
+  try { await Promise.all([loadAccounts(), loadPosts(), loadStatus(), loadSettings()]); }
+  catch (e) { showToast('โหลดข้อมูลไม่สำเร็จ: ' + e.message, 'error'); }
+  finally { setLoading(false); }
+}
+async function refreshData() {
+  const b = $('#btnRefresh');
+  b.disabled = true; b.style.transition = 'transform .6s'; b.style.transform = 'rotate(360deg)';
+  await loadData();
+  b.disabled = false; setTimeout(() => { b.style.transform = ''; b.style.transition = ''; }, 600);
+  showToast('อัปเดตเรียบร้อย ✓', 'success');
+}
+
+// Poll faster while something is posting so per-account results update live
+function schedulePoll() {
+  const busy = state.posts.some(p => p.status === 'running' || p.status === 'queued');
+  setTimeout(async () => {
+    try { await loadPosts(); if (!busy) await loadStatus(); } catch {}
+    schedulePoll();
+  }, busy ? 3000 : 20000);
+}
+
+/* ---------- status ---------- */
+function renderStatus() {
+  const s = state.status;
+  const pill = $('#statusPill');
+  if (s.publicBase) pill.textContent = '🟢 LINE media พร้อม';
+  else if (s.tunnel?.available === false) pill.textContent = '🟠 LINE: ส่งได้แค่ข้อความ';
+  else pill.textContent = '🟡 กำลังเปิด tunnel…';
+  const rows = [
+    ['ffmpeg (สร้างภาพตัวอย่าง/แปลงไฟล์)', s.ffmpeg ? '<span class="badge badge-ok">พร้อม</span>' : '<span class="badge badge-danger">ไม่พบ</span>'],
+    ['cloudflared (tunnel)', s.tunnel?.available === false ? '<span class="badge badge-danger">ไม่พบ</span>' : s.tunnel?.url ? '<span class="badge badge-ok">ทำงาน</span>' : '<span class="badge badge-warn">ยังไม่พร้อม</span>'],
+    ['URL ที่ LINE ใช้ดึงไฟล์', s.publicBase ? `<code>${esc(s.publicBase)}</code>` : '<span class="txt-muted">—</span>'],
+  ];
+  let html = rows.map(([k, v]) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`).join('');
+  if (s.tunnel?.available === false && !s.publicBase) {
+    html += `<div class="issue warn mt-8">ติดตั้ง cloudflared ด้วยคำสั่ง <code>winget install Cloudflare.cloudflared</code> แล้วปิด-เปิดแอปใหม่ เพื่อให้ส่งรูป/วิดีโอทาง LINE ได้</div>`;
+  }
+  $('#mediaStatus').innerHTML = html;
+}
+async function startTunnel() {
+  showSpinner('กำลังเปิด tunnel…');
+  try { const r = await api('/api/tunnel/start', { method: 'POST', json: {} }); await loadStatus(); showToast(r.url ? 'เปิด tunnel แล้ว' : 'เปิด tunnel ไม่สำเร็จ: ' + (r.tunnel?.error || ''), r.url ? 'success' : 'error'); }
+  catch (e) { showToast(e.message, 'error'); }
+  finally { hideSpinner(); }
+}
+
+/* ---------- compose: caption ---------- */
+const captionFor = p => ($(`.cap-ov[data-p="${p}"]`).value.trim() || $('#caption').value.trim());
+function renderCaptionMeta() {
+  const len = [...$('#caption').value].length;
+  $('#capCount').textContent = `${fmtNum(len)} ตัวอักษร`;
+  const tt = [...captionFor('tiktok')].length, ln = [...captionFor('line')].length;
+  $('#capMeta').innerHTML =
+    `<span class="badge ${tt > 2200 ? 'badge-danger' : 'badge-gold'}">TikTok ${fmtNum(tt)}/2,200</span>` +
+    `<span class="badge ${ln > 5000 ? 'badge-danger' : 'badge-gold'}">LINE ${fmtNum(ln)}/5,000</span>`;
+}
+
+/* ---------- compose: media ---------- */
+function addFiles(list) {
+  for (const file of list) {
+    const kind = file.type.startsWith('video/') ? 'video' : file.type.startsWith('image/') ? 'image' : null;
+    if (!kind) { showToast(`ข้าม ${file.name}: รองรับเฉพาะรูปและวิดีโอ`, 'warning'); continue; }
+    const hasVideo = state.files.some(f => f.kind === 'video');
+    if (kind === 'video' && state.files.length) { showToast('วิดีโอต้องโพสต์เดี่ยว ๆ — ลบไฟล์เดิมออกก่อน', 'warning'); continue; }
+    if (kind === 'image' && hasVideo) { showToast('มีวิดีโออยู่แล้ว ใส่รูปเพิ่มไม่ได้', 'warning'); continue; }
+    if (state.files.length >= 10) { showToast('ใส่รูปได้สูงสุด 10 รูป', 'warning'); break; }
+    state.files.push({ file, kind, url: URL.createObjectURL(file) });
+  }
+  renderThumbs();
+}
+function removeFile(i) {
+  URL.revokeObjectURL(state.files[i].url);
+  state.files.splice(i, 1);
+  renderThumbs();
+}
+function renderThumbs() {
+  $('#thumbs').innerHTML = state.files.map((f, i) => `
+    <div class="thumb">
+      ${f.kind === 'video' ? `<video src="${f.url}" muted playsinline preload="metadata"></video>` : `<img src="${f.url}" alt="">`}
+      <button class="rm" onclick="removeFile(${i})" title="ลบ">✕</button>
+      <span class="sz">${f.kind === 'video' ? '🎬 ' : ''}${fmtSize(f.file.size)}</span>
+    </div>`).join('');
+  renderIssues();
+}
+(() => {
+  const dz = $('#dropzone'), fi = $('#fileInput');
+  dz.onclick = () => fi.click();
+  fi.onchange = () => { addFiles(fi.files); fi.value = ''; };
+  dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
+  dz.ondragleave = () => dz.classList.remove('drag');
+  dz.ondrop = e => { e.preventDefault(); dz.classList.remove('drag'); addFiles(e.dataTransfer.files); };
+})();
+
+/* ---------- compose: targets ---------- */
+function renderTargets() {
+  const valid = new Set(state.accounts.filter(a => a.enabled).map(a => a.id));
+  state.selected = new Set([...state.selected].filter(id => valid.has(id)));
+  let html = '';
+  for (const [p, meta] of Object.entries(PLATFORMS)) {
+    const accs = state.accounts.filter(a => a.platform === p && a.enabled);
+    const allOn = accs.length && accs.every(a => state.selected.has(a.id));
+    html += `<div class="tgroup"><div class="tgroup-head"><span class="pf pf-${p}">${meta.icon}</span>${meta.label}<span class="sp"></span>
+      ${accs.length ? `<button class="btn btn-outline btn-sm" onclick="selectPlatform('${p}', ${!allOn})">${allOn ? 'ไม่เลือกทั้งหมด' : 'เลือกทั้งหมด'}</button>` : ''}</div>`;
+    html += accs.length ? accs.map(a => `
+      <label class="acc-row"><input type="checkbox" ${state.selected.has(a.id) ? 'checked' : ''} onchange="toggleTarget('${a.id}', this.checked)">
+        ${avatar(a)}<div class="acc-info"><div class="acc-name">${esc(a.name)}</div><div class="acc-sub">${esc(accSub(a))}</div></div></label>`).join('')
+      : `<div class="empty">ยังไม่มีบัญชี — <a href="#" onclick="switchTab('accounts');return false">เพิ่มที่แท็บบัญชี</a></div>`;
+    html += '</div>';
+  }
+  $('#targetList').innerHTML = html;
+  $('#selCount').textContent = `${state.selected.size} บัญชี`;
+  $('#ttOptions').classList.toggle('hidden', !selectedPlatforms().has('tiktok'));
+  store.set('rsp.selected', [...state.selected]);
+  renderIssues();
+}
+const selectedPlatforms = () => new Set([...state.selected].map(id => accById(id)?.platform).filter(Boolean));
+function toggleTarget(id, on) { on ? state.selected.add(id) : state.selected.delete(id); renderTargets(); }
+function selectPlatform(p, on) {
+  state.accounts.filter(a => a.platform === p && a.enabled).forEach(a => on ? state.selected.add(a.id) : state.selected.delete(a.id));
+  renderTargets();
+}
+
+/* ---------- compose: schedule ---------- */
+const isLater = () => $('input[name="when"]:checked').value === 'later';
+function onWhenChange() {
+  $('#scheduleBox').classList.toggle('hidden', !isLater());
+  if (isLater() && !$('#scheduleAt').value) {
+    const d = new Date(Date.now() + 60 * 60e3); d.setMinutes(0, 0, 0);
+    $('#scheduleAt').value = new Date(d - d.getTimezoneOffset() * 60e3).toISOString().slice(0, 16);
+  }
+  const v = $('#scheduleAt').value;
+  $('#scheduleTh').textContent = v ? `จะโพสต์วันที่ ${formatThaiDate(v)} เวลา ${formatThaiTime(v)} น. — ต้องเปิดแอปนี้ค้างไว้จนถึงเวลานั้น` : '';
+  $('#btnSubmit').textContent = isLater() ? '⏰ ตั้งเวลาโพสต์' : '🚀 โพสต์เลย';
+  renderIssues();
+}
+$$('input[name="when"]').forEach(r => r.onchange = onWhenChange);
+$('#scheduleAt').oninput = onWhenChange;
+$('#ttMode').onchange = () => { $('#ttPrivacyField').classList.toggle('hidden', $('#ttMode').value === 'draft'); renderIssues(); };
+$('#ttPrivacy').onchange = renderIssues;
+$('#caption').oninput = () => { renderCaptionMeta(); renderIssues(); store.set('rsp.draft', $('#caption').value); };
+$$('.cap-ov').forEach(t => t.oninput = () => { renderCaptionMeta(); renderIssues(); });
+
+/* ---------- compose: validation ---------- */
+function computeIssues() {
+  const errs = [], warns = [];
+  const plats = selectedPlatforms();
+  const images = state.files.filter(f => f.kind === 'image');
+  const video = state.files.find(f => f.kind === 'video');
+  const anyText = ['facebook', 'tiktok', 'line'].some(p => captionFor(p));
+  if (!state.selected.size) errs.push('เลือกบัญชีปลายทางอย่างน้อย 1 บัญชี');
+  if (!anyText && !state.files.length) errs.push('ใส่ข้อความหรือแนบรูป/วิดีโอ');
+  if (plats.has('tiktok')) {
+    if (!video) errs.push('TikTok ต้องแนบวิดีโอ 1 ไฟล์ (ยังไม่รองรับโพสต์รูป)');
+    if ([...captionFor('tiktok')].length > 2200) errs.push('ข้อความ TikTok ยาวเกิน 2,200 ตัวอักษร');
+    if ($('#ttMode').value === 'direct' && $('#ttPrivacy').value !== 'SELF_ONLY')
+      warns.push('TikTok: ถ้าแอปยังไม่ผ่าน Audit จะโพสต์ได้แค่ "เฉพาะฉัน" — ถ้าขึ้น error ให้เปลี่ยนเป็นเฉพาะฉัน หรือเลือกส่งเป็นดราฟต์');
+  }
+  if (plats.has('line')) {
+    const n = [...state.selected].filter(id => accById(id)?.platform === 'line').length;
+    if (state.files.length && !state.status.mediaReady) errs.push('LINE: ส่งรูป/วิดีโอไม่ได้เพราะไม่มี URL สาธารณะ — ติดตั้ง cloudflared หรือใส่ Public Media URL ในแท็บตั้งค่า');
+    if (video && !state.status.ffmpeg) errs.push('LINE: ต้องมี ffmpeg เพื่อสร้างภาพตัวอย่างวิดีโอ');
+    if (video && video.file.size > 200 * MB) errs.push('LINE: วิดีโอต้องไม่เกิน 200MB');
+    if ([...captionFor('line')].length > 5000) errs.push('ข้อความ LINE ยาวเกิน 5,000 ตัวอักษร');
+    if (images.length > (captionFor('line') ? 4 : 5)) warns.push('LINE: รูปเยอะเกินจะส่งแยก — จะรวมเป็นอัลบั้มเลื่อน (Flex carousel) ให้แทน');
+    warns.push(`LINE Broadcast ส่งถึงเพื่อนทุกคนของ OA (${n} OA) และนับโควต้าข้อความรายเดือน`);
+  }
+  if (isLater()) {
+    const v = $('#scheduleAt').value;
+    if (!v || new Date(v) <= new Date()) errs.push('เลือกเวลาโพสต์ที่เป็นอนาคต');
+  }
+  return { errs, warns };
+}
+function renderIssues() {
+  const { errs, warns } = computeIssues();
+  $('#issues').innerHTML = errs.map(e => `<div class="issue err">⛔ ${esc(e)}</div>`).join('') + warns.map(w => `<div class="issue warn">⚠️ ${esc(w)}</div>`).join('');
+  $('#btnSubmit').disabled = errs.length > 0;
+}
+
+/* ---------- compose: submit ---------- */
+function uploadPost(fd) {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open('POST', '/api/posts');
+    x.setRequestHeader('x-app', 'rattana');
+    x.upload.onprogress = e => { if (e.lengthComputable) $('#uploadProg > div').style.width = `${e.loaded / e.total * 100}%`; };
+    x.onload = () => {
+      let j = {}; try { j = JSON.parse(x.responseText); } catch {}
+      x.status < 300 ? resolve(j) : reject(new Error(j.error || `HTTP ${x.status}`));
+    };
+    x.onerror = () => reject(new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — แอปยังเปิดอยู่ไหม?'));
+    x.send(fd);
+  });
+}
+async function submitPost() {
+  const { errs } = computeIssues();
+  if (errs.length) return renderIssues();
+  const n = state.selected.size;
+  const when = isLater() ? `ตั้งเวลา ${formatThaiDateTime($('#scheduleAt').value)} น.` : 'ทันที';
+  if (!confirm(`ยืนยันโพสต์ไป ${n} บัญชี (${when}) ?`)) return;
+
+  const fd = new FormData();
+  fd.append('caption', $('#caption').value.trim());
+  fd.append('captions', JSON.stringify(Object.fromEntries($$('.cap-ov').map(t => [t.dataset.p, t.value.trim()]))));
+  fd.append('targets', JSON.stringify([...state.selected]));
+  fd.append('tiktok', JSON.stringify({ mode: $('#ttMode').value, privacy: $('#ttPrivacy').value, disableComment: !$('#ttComments').checked }));
+  if (isLater()) fd.append('scheduledAt', new Date($('#scheduleAt').value).toISOString());
+  state.files.forEach(f => fd.append('files', f.file, f.file.name));
+
+  const btn = $('#btnSubmit');
+  btn.disabled = true;
+  $('#uploadProg').classList.remove('hidden');
+  $('#uploadProg > div').style.width = '0';
+  try {
+    await uploadPost(fd);
+    showToast(isLater() ? 'ตั้งเวลาโพสต์เรียบร้อย ✓' : 'เริ่มโพสต์แล้ว ดูผลได้ที่แท็บโพสต์ ✓', 'success');
+    resetCompose();
+    await loadPosts();
+    switchTab('posts');
+  } catch (e) {
+    showToast(e.message, 'error', 6000);
+  } finally {
+    $('#uploadProg').classList.add('hidden');
+    renderIssues();
+  }
+}
+function resetCompose() {
+  $('#caption').value = '';
+  $$('.cap-ov').forEach(t => t.value = '');
+  store.set('rsp.draft', '');
+  state.files.forEach(f => URL.revokeObjectURL(f.url));
+  state.files = [];
+  $('input[name="when"][value="now"]').checked = true;
+  $('#scheduleAt').value = '';
+  renderThumbs(); renderCaptionMeta(); onWhenChange();
+}
+function reusePost(id) {
+  const p = state.posts.find(x => x.id === id);
+  if (!p) return;
+  $('#caption').value = p.caption || '';
+  $$('.cap-ov').forEach(t => t.value = p.captions?.[t.dataset.p] || '');
+  if (Object.values(p.captions || {}).some(Boolean)) $('#overrides').open = true;
+  state.selected = new Set(p.targets);
+  renderTargets(); renderCaptionMeta(); renderIssues();
+  switchTab('compose');
+  showToast('คัดลอกข้อความและบัญชีมาแล้ว — แนบรูป/วิดีโอใหม่อีกครั้ง', 'info');
+}
+
+/* ---------- posts table ---------- */
+const postWhen = p => p.scheduledAt || p.createdAt;
+function renderStatusChips() {
+  const counts = state.posts.reduce((m, p) => (m[p.status] = (m[p.status] || 0) + 1, m), {});
+  const chips = [['all', 'ทั้งหมด', state.posts.length], ...Object.entries(STATUS).filter(([k]) => counts[k]).map(([k, [l]]) => [k, l, counts[k]])];
+  $('#statusChips').innerHTML = chips.map(([k, l, c]) => `<button class="chip ${state.postFilter === k ? 'active' : ''}" onclick="state.postFilter='${k}';renderPosts()">${l} (${c})</button>`).join('');
+}
+function sortPosts(rows) {
+  const m = sortState.dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a, b) => sortState.key === 'status'
+    ? String(STATUS[a.status]?.[0]).localeCompare(String(STATUS[b.status]?.[0]), 'th') * m
+    : (new Date(postWhen(a)) - new Date(postWhen(b))) * m);
+}
+function renderPosts() {
+  renderStatusChips();
+  const running = state.posts.filter(p => ['running', 'queued'].includes(p.status)).length;
+  $('#cntRunning').textContent = running;
+  $('#cntRunning').classList.toggle('hidden', !running);
+
+  const q = state.search.trim().toLowerCase();
+  const rows = sortPosts(state.posts.filter(p =>
+    (state.postFilter === 'all' || p.status === state.postFilter) &&
+    (!q || (p.caption || '').toLowerCase().includes(q) || p.targets.some(id => (accById(id)?.name || '').toLowerCase().includes(q)))));
+
+  $('#postTbl tbody').innerHTML = rows.length ? rows.map(p => {
+    const [label, cls] = STATUS[p.status] || [p.status, 'badge-info'];
+    const media = p.media.map(m => m.kind === 'video' ? '<span class="vid" title="วิดีโอ">🎬</span>' : `<img src="/uploads/${encodeURIComponent(m.file)}" alt="" loading="lazy">`).join('') || '<span class="txt-muted">—</span>';
+    const results = p.targets.map(id => {
+      const a = accById(id), r = p.results[id] || { status: 'pending' };
+      const plat = a?.platform;
+      return `<div class="res-line">${RESULT_ICON[r.status] || '•'} ${plat ? `<span class="pf pf-${plat}">${PLATFORMS[plat].icon}</span>` : ''}
+        <div><b>${esc(a?.name || '(บัญชีที่ถูกลบ)')}</b>${r.url ? ` · <a href="${esc(r.url)}" target="_blank" rel="noopener">ดูโพสต์</a>` : ''}
+        ${r.status === 'failed' ? `<div class="res-msg">${esc(r.message)}</div>` : r.note ? `<div class="res-note">${esc(r.note)}</div>` : ''}</div></div>`;
+    }).join('');
+    const acts = [];
+    if (['scheduled', 'missed'].includes(p.status)) acts.push(`<button class="btn btn-gold btn-sm" onclick="postAction('${p.id}','run-now')">โพสต์ตอนนี้</button>`);
+    if (['failed', 'partial'].includes(p.status)) acts.push(`<button class="btn btn-primary btn-sm" onclick="postAction('${p.id}','retry')">ลองใหม่ (ที่ล้มเหลว)</button>`);
+    acts.push(`<button class="btn btn-outline btn-sm" onclick="reusePost('${p.id}')">ใช้ซ้ำ</button>`);
+    if (!['running', 'queued'].includes(p.status)) acts.push(`<button class="btn btn-outline btn-sm txt-danger" onclick="deletePost('${p.id}')">ลบ</button>`);
+    return `<tr>
+      <td style="white-space:nowrap"><b>${formatThaiDate(postWhen(p))}</b><br>${formatThaiTime(postWhen(p))} น.${p.scheduledAt ? '<br><span class="badge badge-info">⏰ ตั้งเวลา</span>' : ''}</td>
+      <td><div class="cap-cell">${esc(p.caption) || '<span class="txt-muted">(ไม่มีข้อความหลัก)</span>'}</div></td>
+      <td><div class="mini-thumbs">${media}</div></td>
+      <td>${results}</td>
+      <td><span class="badge ${cls}">${label}</span></td>
+      <td><div class="actions">${acts.join('')}</div></td></tr>`;
+  }).join('') : `<tr class="empty-row"><td colspan="6">ยังไม่มีโพสต์${state.postFilter !== 'all' || q ? 'ที่ตรงกับตัวกรอง' : ''}</td></tr>`;
+  updateSortIndicators();
+}
+function updateSortIndicators() {
+  $$('#postTbl thead th').forEach(th => {
+    const ind = th.querySelector('.sort-ind');
+    if (ind) ind.textContent = th.dataset.key === sortState.key ? (sortState.dir === 'asc' ? '▲' : '▼') : '';
+  });
+}
+$$('#postTbl thead th[data-key]').forEach(th => th.addEventListener('click', () => {
+  if (sortState.key === th.dataset.key) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+  else { sortState.key = th.dataset.key; sortState.dir = th.dataset.type === 'date' ? 'desc' : 'asc'; }
+  renderPosts();
+}));
+async function postAction(id, action) {
+  try { await api(`/api/posts/${id}/${action}`, { method: 'POST', json: {} }); showToast('เริ่มโพสต์แล้ว', 'success'); await loadPosts(); }
+  catch (e) { showToast(e.message, 'error'); }
+}
+async function deletePost(id) {
+  if (!confirm('ลบโพสต์นี้ออกจากประวัติ?\n(ไม่ได้ลบโพสต์ที่ขึ้นไปแล้วบน Facebook / TikTok / LINE)')) return;
+  try { await api(`/api/posts/${id}`, { method: 'DELETE' }); await loadPosts(); showToast('ลบแล้ว', 'success'); }
+  catch (e) { showToast(e.message, 'error'); }
+}
+
+/* ---------- accounts ---------- */
+function avatar(a) {
+  return a.picture ? `<img class="avatar" src="${esc(a.picture)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=avatar>${esc((a.name || '?')[0])}</div>'">`
+                   : `<div class="avatar">${esc((a.name || '?')[0])}</div>`;
+}
+function accSub(a) {
+  if (a.platform === 'facebook') return `Page ID ${a.externalId}${a.meta?.category ? ' · ' + a.meta.category : ''}`;
+  if (a.platform === 'line') return a.meta?.basicId || a.externalId;
+  if (a.platform === 'tiktok') return a.expiresAt ? `ต้องเชื่อมต่อใหม่ก่อน ${formatThaiDate(a.expiresAt)}` : 'TikTok';
+  return '';
+}
+function renderAccounts() {
+  for (const p of Object.keys(PLATFORMS)) {
+    const accs = state.accounts.filter(a => a.platform === p);
+    $('#cnt-' + p).textContent = accs.length;
+    $('#acc-' + p).innerHTML = accs.length ? accs.map(a => `
+      <div class="acc-row ${a.enabled ? '' : 'off'}">
+        ${avatar(a)}
+        <div class="acc-info"><div class="acc-name">${esc(a.name)}</div><div class="acc-sub">${esc(accSub(a))}</div></div>
+        <div class="actions">
+          ${p === 'line' ? `<button class="btn btn-outline btn-sm" onclick="showQuota('${a.id}')" title="โควต้าข้อความ">📊</button>` : ''}
+          <button class="btn btn-outline btn-sm" onclick="renameAccount('${a.id}')" title="เปลี่ยนชื่อ">✏️</button>
+          <button class="btn btn-outline btn-sm" onclick="setEnabled('${a.id}', ${!a.enabled})" title="${a.enabled ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}">${a.enabled ? '⏸' : '▶'}</button>
+          <button class="btn btn-outline btn-sm txt-danger" onclick="removeAccount('${a.id}')" title="ลบ">🗑</button>
+        </div>
+      </div>`).join('') : '<div class="empty">ยังไม่มีบัญชี</div>';
+  }
+}
+async function addLine() {
+  showSpinner('กำลังตรวจสอบ Token…');
+  try {
+    const a = await api('/api/accounts/line', { method: 'POST', json: { name: $('#lineName').value, token: $('#lineToken').value } });
+    closeModal('lineModal'); $('#lineName').value = ''; $('#lineToken').value = '';
+    state.selected.add(a.id);
+    await loadAccounts();
+    showToast(`เพิ่ม ${a.name} แล้ว ✓`, 'success');
+  } catch (e) { showToast(e.message, 'error', 6000); }
+  finally { hideSpinner(); }
+}
+async function addFbToken() {
+  showSpinner('กำลังดึงรายชื่อเพจ…');
+  try {
+    const r = await api('/api/accounts/facebook/token', { method: 'POST', json: { token: $('#fbToken').value } });
+    closeModal('fbModal'); $('#fbToken').value = '';
+    await loadAccounts();
+    showToast(`นำเข้า ${r.count} เพจแล้ว ✓`, 'success');
+  } catch (e) { showToast(e.message, 'error', 6000); }
+  finally { hideSpinner(); }
+}
+async function renameAccount(id) {
+  const a = accById(id);
+  const name = prompt('ชื่อที่ใช้แสดงในแอป', a?.name || '');
+  if (!name?.trim()) return;
+  try { await api(`/api/accounts/${id}`, { method: 'PATCH', json: { name } }); await loadAccounts(); }
+  catch (e) { showToast(e.message, 'error'); }
+}
+async function setEnabled(id, enabled) {
+  try { await api(`/api/accounts/${id}`, { method: 'PATCH', json: { enabled } }); await loadAccounts(); }
+  catch (e) { showToast(e.message, 'error'); }
+}
+async function removeAccount(id) {
+  const a = accById(id);
+  if (!confirm(`ลบบัญชี "${a?.name}" ออกจากแอป?`)) return;
+  try { await api(`/api/accounts/${id}`, { method: 'DELETE' }); await loadAccounts(); showToast('ลบแล้ว', 'success'); }
+  catch (e) { showToast(e.message, 'error'); }
+}
+async function showQuota(id) {
+  setLoading(true);
+  try {
+    const q = await api(`/api/accounts/${id}/quota`);
+    const lim = q.type === 'limited' ? fmtNum(q.limit) : 'ไม่จำกัด';
+    showToast(`${accById(id)?.name}: ใช้ไป ${fmtNum(q.used)} / ${lim} ข้อความ เดือนนี้`, 'info', 6000);
+  } catch (e) { showToast(e.message, 'error'); }
+  finally { setLoading(false); }
+}
+
+/* ---------- settings ---------- */
+function renderSettings() {
+  const s = state.settings;
+  $('#sFbAppId').value = s.fbAppId;
+  $('#sTtKey').value = s.ttClientKey;
+  $('#sPublicBase').value = s.publicBaseUrl;
+  $('#sFbAppSecret').placeholder = s.fbAppSecretSet ? '•••••• (บันทึกแล้ว — เว้นว่างถ้าไม่เปลี่ยน)' : '';
+  $('#sTtSecret').placeholder = s.ttClientSecretSet ? '•••••• (บันทึกแล้ว — เว้นว่างถ้าไม่เปลี่ยน)' : '';
+  $('#rFb').value = s.redirect.facebook;
+  $('#rTt').value = s.redirect.tiktok;
+}
+async function saveSettings() {
+  try {
+    await api('/api/settings', { method: 'POST', json: {
+      fbAppId: $('#sFbAppId').value, fbAppSecret: $('#sFbAppSecret').value,
+      ttClientKey: $('#sTtKey').value, ttClientSecret: $('#sTtSecret').value,
+      publicBaseUrl: $('#sPublicBase').value,
+    } });
+    $('#sFbAppSecret').value = ''; $('#sTtSecret').value = '';
+    await Promise.all([loadSettings(), loadStatus()]);
+    showToast('บันทึกการตั้งค่าแล้ว ✓', 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+/* ---------- boot ---------- */
+(async function init() {
+  if (store.get('rsp.dark', false)) toggleDark();
+  state.selected = new Set(store.get('rsp.selected', []));
+  $('#caption').value = store.get('rsp.draft', '');
+
+  // Messages coming back from the Facebook / TikTok OAuth redirect
+  const q = new URLSearchParams(location.search);
+  if (q.get('error')) showToast(q.get('error'), 'error', 8000);
+  if (q.get('connected')) showToast(`เชื่อมต่อ ${PLATFORMS[q.get('connected')]?.label || ''} สำเร็จ (${q.get('count') || 1} บัญชี) ✓`, 'success', 5000);
+  switchTab(q.get('tab') || store.get('rsp.tab', 'compose'));
+  if (location.search) history.replaceState(null, '', '/');
+
+  renderCaptionMeta();
+  onWhenChange();
+  await loadData();
+  schedulePoll();
+})();
+</script>
+</body>
+</html>

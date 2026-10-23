@@ -1,0 +1,3 @@
+node_modules/
+# Tokens, settings and uploaded media — never commit
+data/
