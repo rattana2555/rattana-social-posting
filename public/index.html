@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Rattana Social Posting v1.0</title>
+<title>Rattana Social Posting v1.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -191,6 +191,17 @@ body.dark .chip.active{background:var(--gold);color:var(--navy);border-color:var
 .mini-thumbs img,.mini-thumbs .vid{width:40px;height:40px;border-radius:4px;object-fit:cover;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
 .tt-mode{height:30px;font-size:12px;padding:0 8px;width:auto}
+.tt-acc{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px}
+.tt-acc-head{display:flex;align-items:center;gap:10px}
+.tt-acc .field{margin:10px 0 0}
+.checks{display:flex;gap:4px 16px;flex-wrap:wrap}
+.check-row{display:flex;gap:8px;align-items:flex-start;cursor:pointer;min-height:32px;padding:4px 0}
+.check-row input{width:18px;height:18px;accent-color:var(--gold);margin-top:3px;flex-shrink:0}
+.check-row.off{opacity:.5;cursor:not-allowed}
+.tt-disclosure{border-top:1px dashed var(--border);padding-top:10px}
+.tt-disclose-opts{padding-left:26px}
+.tt-declare{margin-top:12px;font-size:12px;line-height:1.6;color:var(--muted)}
+.tt-declare b{color:var(--text)}
 
 .acc-grid{display:grid;grid-template-columns:1fr;gap:16px}
 @media(min-width:900px){.acc-grid{grid-template-columns:repeat(3,1fr)}}
@@ -211,7 +222,7 @@ code{font-family:Consolas,monospace;font-size:12px;background:rgba(201,168,76,.1
 <div class="topbar">
 <header>
   <div class="logo-mark">R</div>
-  <div class="logo-text">RATTANA <span>SOCIAL</span><span class="ver">v1.0</span></div>
+  <div class="logo-text">RATTANA <span>SOCIAL</span><span class="ver">v1.1</span></div>
   <div class="hdr-sp"></div>
   <div class="status-pill" id="statusPill" onclick="switchTab('settings')">…</div>
   <button class="icon-btn" id="btnRefresh" title="รีเฟรช" onclick="refreshData()">⟳</button>
@@ -267,25 +278,28 @@ code{font-family:Consolas,monospace;font-size:12px;background:rgba(201,168,76,.1
         </div>
 
         <div class="card card-gold hidden" id="ttOptions">
-          <div class="card-head"><h3><span class="pf pf-tiktok">♪</span> ตัวเลือก TikTok</h3></div>
+          <div class="card-head"><h3><span class="pf pf-tiktok">♪</span> ตั้งค่าโพสต์ TikTok</h3></div>
           <div class="card-body">
             <div class="field">
-              <label>วิธีส่ง</label>
+              <label>วิธีส่ง (Posting method)</label>
               <select class="input" id="ttMode">
                 <option value="direct">โพสต์ทันที (Direct Post)</option>
-                <option value="draft">ส่งเข้าแอป TikTok เป็นดราฟต์ ให้กดโพสต์เอง</option>
+                <option value="draft">ส่งเข้าแอป TikTok เป็นดราฟต์ ให้กดโพสต์เอง (Upload as draft)</option>
               </select>
             </div>
-            <div class="field" id="ttPrivacyField">
-              <label>ใครเห็นได้</label>
-              <select class="input" id="ttPrivacy">
-                <option value="PUBLIC_TO_EVERYONE">ทุกคน (สาธารณะ)</option>
-                <option value="FOLLOWER_OF_CREATOR">ผู้ติดตาม</option>
-                <option value="MUTUAL_FOLLOW_FRIENDS">เพื่อน (ติดตามกันและกัน)</option>
-                <option value="SELF_ONLY">เฉพาะฉัน</option>
-              </select>
+            <div id="ttAccounts"></div>
+            <div class="tt-disclosure" id="ttDisclosure">
+              <label class="check-row"><input type="checkbox" id="ttDisclose">
+                <div><b>เปิดเผยเนื้อหาเชิงพาณิชย์ (Disclose video content)</b>
+                <div class="hint">เปิดถ้าวิดีโอนี้โปรโมตสินค้า/บริการของตัวเอง หรือของแบรนด์อื่น</div></div></label>
+              <div class="tt-disclose-opts hidden" id="ttDiscloseOpts">
+                <label class="check-row"><input type="checkbox" id="ttBrandOrganic">
+                  <div><b>แบรนด์ของคุณ (Your brand)</b><div class="hint">โปรโมตตัวเองหรือธุรกิจของคุณ</div></div></label>
+                <label class="check-row"><input type="checkbox" id="ttBranded">
+                  <div><b>เนื้อหาที่ได้รับการสนับสนุน (Branded content)</b><div class="hint">โปรโมตแบรนด์อื่นหรือบุคคลที่สาม</div></div></label>
+                <div class="badge badge-info hidden" id="ttDiscloseLabel"></div>
+              </div>
             </div>
-            <label class="flex gap-8" style="align-items:center;cursor:pointer"><input type="checkbox" id="ttComments" checked style="width:18px;height:18px;accent-color:var(--gold)"> อนุญาตให้คอมเมนต์</label>
           </div>
         </div>
 
@@ -304,6 +318,7 @@ code{font-family:Consolas,monospace;font-size:12px;background:rgba(201,168,76,.1
         </div>
 
         <div class="issues" id="issues"></div>
+        <div class="tt-declare hidden" id="ttDeclare"></div>
         <button class="btn btn-gold btn-lg btn-block mt-16" id="btnSubmit" onclick="submitPost()">🚀 โพสต์เลย</button>
         <div class="progress hidden" id="uploadProg"><div></div></div>
       </div>
@@ -453,7 +468,7 @@ const STATUS = {
 const RESULT_ICON = { pending: '⏳', running: '🔄', success: '✅', failed: '❌' };
 const MB = 1024 * 1024;
 
-const state = { accounts: [], posts: [], status: {}, settings: {}, files: [], selected: new Set(), postFilter: 'all', search: '' };
+const state = { accounts: [], posts: [], status: {}, settings: {}, files: [], selected: new Set(), postFilter: 'all', search: '', creators: {}, ttAcc: {} };
 const sortState = { key: 'when', dir: 'desc' };
 
 const $ = s => document.querySelector(s);
@@ -596,7 +611,15 @@ function addFiles(list) {
     if (kind === 'video' && state.files.length) { showToast('วิดีโอต้องโพสต์เดี่ยว ๆ — ลบไฟล์เดิมออกก่อน', 'warning'); continue; }
     if (kind === 'image' && hasVideo) { showToast('มีวิดีโออยู่แล้ว ใส่รูปเพิ่มไม่ได้', 'warning'); continue; }
     if (state.files.length >= 10) { showToast('ใส่รูปได้สูงสุด 10 รูป', 'warning'); break; }
-    state.files.push({ file, kind, url: URL.createObjectURL(file) });
+    const entry = { file, kind, url: URL.createObjectURL(file) };
+    if (kind === 'video') {
+      // Duration is checked against each TikTok account's max_video_post_duration_sec
+      const v = document.createElement('video');
+      v.preload = 'metadata';
+      v.onloadedmetadata = () => { entry.duration = v.duration; renderThumbs(); };
+      v.src = entry.url;
+    }
+    state.files.push(entry);
   }
   renderThumbs();
 }
@@ -610,7 +633,7 @@ function renderThumbs() {
     <div class="thumb">
       ${f.kind === 'video' ? `<video src="${f.url}" muted playsinline preload="metadata"></video>` : `<img src="${f.url}" alt="">`}
       <button class="rm" onclick="removeFile(${i})" title="ลบ">✕</button>
-      <span class="sz">${f.kind === 'video' ? '🎬 ' : ''}${fmtSize(f.file.size)}</span>
+      <span class="sz">${f.kind === 'video' ? `🎬 ${f.duration ? fmtDur(f.duration) + ' · ' : ''}` : ''}${fmtSize(f.file.size)}</span>
     </div>`).join('');
   renderIssues();
 }
@@ -641,8 +664,9 @@ function renderTargets() {
   }
   $('#targetList').innerHTML = html;
   $('#selCount').textContent = `${state.selected.size} บัญชี`;
-  $('#ttOptions').classList.toggle('hidden', !selectedPlatforms().has('tiktok'));
   store.set('rsp.selected', [...state.selected]);
+  tiktokTargets().forEach(id => loadCreator(id));
+  renderTikTokOptions();
   renderIssues();
 }
 const selectedPlatforms = () => new Set([...state.selected].map(id => accById(id)?.platform).filter(Boolean));
@@ -667,8 +691,90 @@ function onWhenChange() {
 }
 $$('input[name="when"]').forEach(r => r.onchange = onWhenChange);
 $('#scheduleAt').oninput = onWhenChange;
-$('#ttMode').onchange = () => { $('#ttPrivacyField').classList.toggle('hidden', $('#ttMode').value === 'draft'); renderIssues(); };
-$('#ttPrivacy').onchange = renderIssues;
+/* ---------- compose: TikTok (Direct Post UX guidelines) ---------- */
+const PRIVACY_LABEL = {
+  PUBLIC_TO_EVERYONE: 'ทุกคน (Everyone)',
+  FOLLOWER_OF_CREATOR: 'ผู้ติดตาม (Followers)',
+  MUTUAL_FOLLOW_FRIENDS: 'เพื่อน (Friends)',
+  SELF_ONLY: 'เฉพาะฉัน (Only me)',
+};
+const TT_MUSIC_URL = 'https://www.tiktok.com/legal/page/global/music-usage-confirmation/en';
+const TT_BC_URL = 'https://www.tiktok.com/legal/page/global/bc-policy/en';
+const fmtDur = s => { const t = Math.round(s); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+const tiktokTargets = () => [...state.selected].filter(id => accById(id)?.platform === 'tiktok');
+const isTtDraft = () => $('#ttMode').value === 'draft';
+// Nothing is preselected: the guidelines require the user to choose privacy and interactions themselves
+const ttSettings = id => (state.ttAcc[id] ||= { privacy: '', allowComment: false, allowDuet: false, allowStitch: false });
+function ttDisclosure() {
+  const on = $('#ttDisclose').checked;
+  return { disclose: on, brandOrganic: on && $('#ttBrandOrganic').checked, brandedContent: on && $('#ttBranded').checked };
+}
+
+async function loadCreator(id, force = false) {
+  const c = state.creators[id];
+  if (c && !force && (c.loading || Date.now() - c.at < 5 * 60e3)) return;
+  state.creators[id] = { loading: true, at: Date.now() };
+  renderTikTokOptions();
+  try { state.creators[id] = { data: await api(`/api/accounts/${id}/tiktok-creator`), at: Date.now() }; }
+  catch (e) { state.creators[id] = { error: e.message, at: Date.now() }; }
+  renderTikTokOptions();
+  renderIssues();
+}
+
+function renderTikTokOptions() {
+  const ids = tiktokTargets();
+  $('#ttOptions').classList.toggle('hidden', !ids.length);
+  if (!ids.length) return;
+  const draft = isTtDraft();
+  const branded = ttDisclosure().brandedContent;
+  $('#ttDisclosure').classList.toggle('hidden', draft);
+  $('#ttAccounts').innerHTML = ids.map(id => {
+    const a = accById(id), c = state.creators[id], s = ttSettings(id), d = c?.data;
+    const pic = d?.avatar ? `<img class="avatar" src="${esc(d.avatar)}" alt="" referrerpolicy="no-referrer">` : avatar(a);
+    const sub = [d?.username && '@' + d.username, d?.maxDurationSec && `วิดีโอยาวสุด ${d.maxDurationSec >= 60 ? Math.floor(d.maxDurationSec / 60) + ' นาที' : d.maxDurationSec + ' วินาที'}`].filter(Boolean).join(' · ');
+    const head = `<div class="tt-acc-head">${pic}<div class="acc-info"><div class="acc-name">${esc(d?.nickname || a.name)}</div><div class="acc-sub">${esc(sub)}</div></div></div>`;
+    if (draft) return `<div class="tt-acc">${head}</div>`;
+    if (!c || c.loading) return `<div class="tt-acc">${head}<div class="hint mt-8">กำลังโหลดข้อมูลบัญชีจาก TikTok…</div></div>`;
+    if (c.error) return `<div class="tt-acc">${head}<div class="issue err mt-8">${esc(c.error)} <button class="btn btn-outline btn-sm" onclick="loadCreator('${id}', true)">ลองใหม่</button></div></div>`;
+    const opts = d.privacyOptions.map(v => {
+      const off = branded && v === 'SELF_ONLY';
+      return `<option value="${v}" ${s.privacy === v ? 'selected' : ''} ${off ? 'disabled' : ''}>${PRIVACY_LABEL[v] || v}${off ? ' — ใช้กับ Branded content ไม่ได้' : ''}</option>`;
+    }).join('');
+    const chk = (key, label, disabled) => `<label class="check-row ${disabled ? 'off' : ''}"><input type="checkbox" ${s[key] && !disabled ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+      onchange="setTtAcc('${id}', '${key}', this.checked)"> ${label}${disabled ? ' <span class="hint">(ปิดไว้ในบัญชี TikTok)</span>' : ''}</label>`;
+    return `<div class="tt-acc">${head}
+      <div class="field"><label>ใครเห็นได้ (Who can view this video)</label>
+        <select class="input" onchange="setTtAcc('${id}', 'privacy', this.value)"><option value="" disabled ${s.privacy ? '' : 'selected'}>— เลือก —</option>${opts}</select></div>
+      <div class="field"><label>อนุญาตให้ผู้ใช้ (Allow users to)</label>
+        <div class="checks">${chk('allowComment', 'คอมเมนต์ (Comment)', d.commentDisabled)}${chk('allowDuet', 'Duet', d.duetDisabled)}${chk('allowStitch', 'Stitch', d.stitchDisabled)}</div></div>
+    </div>`;
+  }).join('');
+}
+function setTtAcc(id, key, value) { ttSettings(id)[key] = value; renderIssues(); }
+function onDisclosureChange() {
+  const d = ttDisclosure();
+  $('#ttDiscloseOpts').classList.toggle('hidden', !d.disclose);
+  if (d.brandedContent) Object.values(state.ttAcc).forEach(s => { if (s.privacy === 'SELF_ONLY') s.privacy = ''; });
+  const label = d.brandedContent ? 'วิดีโอจะติดป้าย "Paid partnership"' : d.brandOrganic ? 'วิดีโอจะติดป้าย "Promotional content"' : '';
+  $('#ttDiscloseLabel').textContent = label;
+  $('#ttDiscloseLabel').classList.toggle('hidden', !label);
+  renderTikTokOptions();
+  renderIssues();
+}
+function renderDeclaration() {
+  const show = selectedPlatforms().has('tiktok') && !isTtDraft();
+  $('#ttDeclare').classList.toggle('hidden', !show);
+  if (!show) return;
+  const music = `<a href="${TT_MUSIC_URL}" target="_blank" rel="noopener">Music Usage Confirmation</a>`;
+  const bc = `<a href="${TT_BC_URL}" target="_blank" rel="noopener">Branded Content Policy</a>`;
+  $('#ttDeclare').innerHTML = ttDisclosure().brandedContent
+    ? `<b>การโพสต์ถือว่าคุณยอมรับ ${bc} และ ${music} ของ TikTok</b><br>By posting, you agree to TikTok's ${bc} and ${music}.`
+    : `<b>การโพสต์ถือว่าคุณยอมรับ ${music} ของ TikTok</b><br>By posting, you agree to TikTok's ${music}.`;
+}
+$('#ttMode').onchange = () => { renderTikTokOptions(); renderIssues(); };
+$('#ttDisclose').onchange = onDisclosureChange;
+$('#ttBrandOrganic').onchange = onDisclosureChange;
+$('#ttBranded').onchange = onDisclosureChange;
 $('#caption').oninput = () => { renderCaptionMeta(); renderIssues(); store.set('rsp.draft', $('#caption').value); };
 $$('.cap-ov').forEach(t => t.oninput = () => { renderCaptionMeta(); renderIssues(); });
 
@@ -684,8 +790,21 @@ function computeIssues() {
   if (plats.has('tiktok')) {
     if (!video) errs.push('TikTok ต้องแนบวิดีโอ 1 ไฟล์ (ยังไม่รองรับโพสต์รูป)');
     if ([...captionFor('tiktok')].length > 2200) errs.push('ข้อความ TikTok ยาวเกิน 2,200 ตัวอักษร');
-    if ($('#ttMode').value === 'direct' && $('#ttPrivacy').value !== 'SELF_ONLY')
-      warns.push('TikTok: ถ้าแอปยังไม่ผ่าน Audit จะโพสต์ได้แค่ "เฉพาะฉัน" — ถ้าขึ้น error ให้เปลี่ยนเป็นเฉพาะฉัน หรือเลือกส่งเป็นดราฟต์');
+    if (!isTtDraft()) {
+      for (const id of tiktokTargets()) {
+        const name = accById(id)?.name, c = state.creators[id], s = ttSettings(id);
+        if (!c || c.loading) { errs.push(`TikTok ${name}: กำลังโหลดข้อมูลบัญชี…`); continue; }
+        if (c.error) { errs.push(`TikTok ${name}: ${c.error}`); continue; }
+        if (!s.privacy) errs.push(`TikTok ${name}: เลือก "ใครเห็นได้"`);
+        const max = c.data.maxDurationSec;
+        if (video?.duration && max && video.duration > max) errs.push(`TikTok ${name}: วิดีโอยาว ${fmtDur(video.duration)} เกินที่บัญชีนี้โพสต์ได้ (${fmtDur(max)})`);
+      }
+      const d = ttDisclosure();
+      if (d.disclose && !d.brandOrganic && !d.brandedContent)
+        errs.push('TikTok: ต้องระบุว่าเนื้อหาโปรโมตตัวเอง แบรนด์อื่น หรือทั้งสองอย่าง (You need to indicate if your content promotes yourself, a third party, or both.)');
+      if (tiktokTargets().some(id => ttSettings(id).privacy && ttSettings(id).privacy !== 'SELF_ONLY'))
+        warns.push('TikTok: ถ้าแอปยังไม่ผ่าน Audit จะโพสต์ได้แค่ "เฉพาะฉัน" — ถ้าขึ้น error ให้เปลี่ยนเป็นเฉพาะฉัน หรือเลือกส่งเป็นดราฟต์');
+    }
   }
   if (plats.has('line')) {
     const n = [...state.selected].filter(id => accById(id)?.platform === 'line').length;
@@ -706,6 +825,7 @@ function renderIssues() {
   const { errs, warns } = computeIssues();
   $('#issues').innerHTML = errs.map(e => `<div class="issue err">⛔ ${esc(e)}</div>`).join('') + warns.map(w => `<div class="issue warn">⚠️ ${esc(w)}</div>`).join('');
   $('#btnSubmit').disabled = errs.length > 0;
+  renderDeclaration();
 }
 
 /* ---------- compose: submit ---------- */
@@ -734,7 +854,11 @@ async function submitPost() {
   fd.append('caption', $('#caption').value.trim());
   fd.append('captions', JSON.stringify(Object.fromEntries($$('.cap-ov').map(t => [t.dataset.p, t.value.trim()]))));
   fd.append('targets', JSON.stringify([...state.selected]));
-  fd.append('tiktok', JSON.stringify({ mode: $('#ttMode').value, privacy: $('#ttPrivacy').value, disableComment: !$('#ttComments').checked }));
+  fd.append('tiktok', JSON.stringify({
+    mode: $('#ttMode').value,
+    ...ttDisclosure(),
+    accounts: Object.fromEntries(tiktokTargets().map(id => [id, ttSettings(id)])),
+  }));
   if (isLater()) fd.append('scheduledAt', new Date($('#scheduleAt').value).toISOString());
   state.files.forEach(f => fd.append('files', f.file, f.file.name));
 
@@ -744,7 +868,8 @@ async function submitPost() {
   $('#uploadProg > div').style.width = '0';
   try {
     await uploadPost(fd);
-    showToast(isLater() ? 'ตั้งเวลาโพสต์เรียบร้อย ✓' : 'เริ่มโพสต์แล้ว ดูผลได้ที่แท็บโพสต์ ✓', 'success');
+    const ttNote = tiktokTargets().length ? ' — TikTok อาจใช้เวลาประมวลผลสักครู่ก่อนวิดีโอขึ้นบนโปรไฟล์' : '';
+    showToast((isLater() ? 'ตั้งเวลาโพสต์เรียบร้อย ✓' : 'เริ่มโพสต์แล้ว ดูผลได้ที่แท็บโพสต์ ✓') + ttNote, 'success', 6000);
     resetCompose();
     await loadPosts();
     switchTab('posts');
@@ -761,6 +886,9 @@ function resetCompose() {
   store.set('rsp.draft', '');
   state.files.forEach(f => URL.revokeObjectURL(f.url));
   state.files = [];
+  state.ttAcc = {};
+  ['#ttDisclose', '#ttBrandOrganic', '#ttBranded'].forEach(s => { $(s).checked = false; });
+  onDisclosureChange();
   $('input[name="when"][value="now"]').checked = true;
   $('#scheduleAt').value = '';
   renderThumbs(); renderCaptionMeta(); onWhenChange();
@@ -814,8 +942,9 @@ function renderPosts() {
     const acts = [];
     if (['scheduled', 'missed'].includes(p.status)) acts.push(`<button class="btn btn-gold btn-sm" onclick="postAction('${p.id}','run-now')">โพสต์ตอนนี้</button>`);
     if (['scheduled', 'missed'].includes(p.status) && p.targets.some(id => accById(id)?.platform === 'tiktok')) {
-      const cur = p.tiktok?.mode === 'draft' ? 'draft' : p.tiktok?.privacy || 'PUBLIC_TO_EVERYONE';
-      acts.push(`<select class="input tt-mode" title="ตั้งค่า TikTok ของโพสต์นี้" onchange="setTikTokMode('${p.id}', this.value)">${TT_MODES.map(([v, l]) =>
+      const cur = p.tiktok?.mode === 'draft' ? 'draft' : Object.values(p.tiktok?.accounts || {})[0]?.privacy || p.tiktok?.privacy || '';
+      acts.push(`<select class="input tt-mode" title="ตั้งค่า TikTok ของโพสต์นี้" onchange="setTikTokMode('${p.id}', this.value)">
+        <option value="" disabled ${cur ? '' : 'selected'}>♪ เลือก…</option>${TT_MODES.map(([v, l]) =>
         `<option value="${v}" ${v === cur ? 'selected' : ''}>♪ ${l}</option>`).join('')}</select>`);
     }
     if (['failed', 'partial'].includes(p.status)) acts.push(`<button class="btn btn-primary btn-sm" onclick="postAction('${p.id}','retry')">ลองใหม่ (ที่ล้มเหลว)</button>`);

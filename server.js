@@ -8,8 +8,8 @@ import * as fb from './lib/facebook.js';
 import * as tt from './lib/tiktok.js';
 import * as line from './lib/line.js';
 import * as tunnel from './lib/tunnel.js';
-import { hasFfmpeg } from './lib/media.js';
-import { runPost, isRunning, recoverOnStartup, duePosts, deleteMediaFiles } from './lib/publisher.js';
+import { hasFfmpeg, probeDuration } from './lib/media.js';
+import { runPost, isRunning, recoverOnStartup, duePosts, deleteMediaFiles, tiktokToken, mediaPath } from './lib/publisher.js';
 
 const REDIRECT = {
   facebook: `${BASE_URL}/auth/facebook/callback`,
@@ -151,6 +151,21 @@ app.get('/api/accounts/:id/quota', async (req, res) => {
   res.json(await line.quota(a.token));
 });
 
+app.get('/api/accounts/:id/tiktok-creator', async (req, res) => {
+  const a = db.accounts.find(x => x.id === req.params.id && x.platform === 'tiktok') || fail('ไม่พบบัญชี TikTok');
+  const c = await tt.creatorInfo(await tiktokToken(a)).catch(e => { throw new UserError(e.message); });
+  res.json({
+    nickname: c.creator_nickname || a.name,
+    username: c.creator_username || '',
+    avatar: c.creator_avatar_url || a.picture || '',
+    privacyOptions: c.privacy_level_options || [],
+    commentDisabled: !!c.comment_disabled,
+    duetDisabled: !!c.duet_disabled,
+    stitchDisabled: !!c.stitch_disabled,
+    maxDurationSec: c.max_video_post_duration_sec || null,
+  });
+});
+
 app.post('/api/accounts/facebook/token', async (req, res) => {
   res.json({ count: await importFacebookPages(String(req.body.token || '').trim()) });
 });
@@ -254,7 +269,30 @@ app.post('/api/posts', upload.array('files', 10), async (req, res) => {
       scheduledAt = new Date(t).toISOString();
     }
 
-    const tiktok = parseJson(b.tiktok, {});
+    // TikTok settings are chosen per account: each creator has its own privacy options and interaction switches
+    const t = parseJson(b.tiktok, {});
+    const tiktokAccs = accs.filter(a => a.platform === 'tiktok');
+    const tiktok = {
+      mode: t.mode === 'draft' ? 'draft' : 'direct',
+      disclose: !!t.disclose,
+      brandOrganic: !!t.disclose && !!t.brandOrganic,
+      brandedContent: !!t.disclose && !!t.brandedContent,
+      accounts: Object.fromEntries(tiktokAccs.map(a => {
+        const o = t.accounts?.[a.id] || {};
+        return [a.id, { privacy: String(o.privacy || ''), allowComment: !!o.allowComment, allowDuet: !!o.allowDuet, allowStitch: !!o.allowStitch }];
+      })),
+    };
+    if (tiktokAccs.length && tiktok.mode === 'direct') {
+      for (const a of tiktokAccs) {
+        const { privacy } = tiktok.accounts[a.id];
+        if (!privacy) fail(`TikTok: กรุณาเลือก "ใครเห็นได้" ให้บัญชี ${a.name}`);
+        if (tiktok.brandedContent && privacy === 'SELF_ONLY') fail(`TikTok: Branded content ตั้งเป็น "เฉพาะฉัน" ไม่ได้ (บัญชี ${a.name})`);
+      }
+      if (tiktok.disclose && !tiktok.brandOrganic && !tiktok.brandedContent) fail('TikTok: เปิดการเปิดเผยเนื้อหาเชิงพาณิชย์แล้ว ต้องเลือกอย่างน้อย 1 แบบ');
+    }
+
+    for (const m of videos) m.duration = await probeDuration(mediaPath(m.file)).catch(() => null);
+
     const post = {
       id: newId(),
       createdAt: new Date().toISOString(),
@@ -264,11 +302,7 @@ app.post('/api/posts', upload.array('files', 10), async (req, res) => {
       captions: { facebook: String(captions.facebook || ''), tiktok: String(captions.tiktok || ''), line: String(captions.line || '') },
       media,
       targets,
-      tiktok: {
-        mode: tiktok.mode === 'draft' ? 'draft' : 'direct',
-        privacy: String(tiktok.privacy || 'PUBLIC_TO_EVERYONE'),
-        disableComment: !!tiktok.disableComment,
-      },
+      tiktok,
       results: Object.fromEntries(targets.map(id => [id, { status: 'pending' }])),
     };
     db.posts.push(post);
@@ -291,11 +325,17 @@ app.patch('/api/posts/:id', (req, res) => {
   if (!['scheduled', 'missed'].includes(post.status) || isRunning(post.id)) fail('แก้ได้เฉพาะโพสต์ที่ยังรอโพสต์อยู่');
   const t = req.body.tiktok;
   if (t) {
-    post.tiktok = {
-      mode: t.mode === 'draft' ? 'draft' : 'direct',
-      privacy: String(t.privacy || post.tiktok?.privacy || 'PUBLIC_TO_EVERYONE'),
-      disableComment: typeof t.disableComment === 'boolean' ? t.disableComment : !!post.tiktok?.disableComment,
-    };
+    const cur = post.tiktok || {};
+    if (t.mode === 'draft') {
+      post.tiktok = { ...cur, mode: 'draft' };
+    } else {
+      // Applies one privacy level to every TikTok account of the post, keeping their other settings
+      const privacy = String(t.privacy || '') || fail('กรุณาเลือกระดับการมองเห็นของ TikTok');
+      if (cur.brandedContent && privacy === 'SELF_ONLY') fail('Branded content ตั้งเป็น "เฉพาะฉัน" ไม่ได้');
+      const ids = post.targets.filter(id => db.accounts.find(a => a.id === id)?.platform === 'tiktok');
+      const accounts = Object.fromEntries(ids.map(id => [id, { ...(cur.accounts?.[id] || {}), privacy }]));
+      post.tiktok = { ...cur, mode: 'direct', privacy, accounts };
+    }
   }
   save();
   res.json(publicPost(post));
