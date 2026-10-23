@@ -190,6 +190,7 @@ body.dark .chip.active{background:var(--gold);color:var(--navy);border-color:var
 .mini-thumbs{display:flex;gap:4px;flex-wrap:wrap;max-width:140px}
 .mini-thumbs img,.mini-thumbs .vid{width:40px;height:40px;border-radius:4px;object-fit:cover;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
+.tt-mode{height:30px;font-size:12px;padding:0 8px;width:auto}
 
 .acc-grid{display:grid;grid-template-columns:1fr;gap:16px}
 @media(min-width:900px){.acc-grid{grid-template-columns:repeat(3,1fr)}}
@@ -812,6 +813,11 @@ function renderPosts() {
     }).join('');
     const acts = [];
     if (['scheduled', 'missed'].includes(p.status)) acts.push(`<button class="btn btn-gold btn-sm" onclick="postAction('${p.id}','run-now')">โพสต์ตอนนี้</button>`);
+    if (['scheduled', 'missed'].includes(p.status) && p.targets.some(id => accById(id)?.platform === 'tiktok')) {
+      const cur = p.tiktok?.mode === 'draft' ? 'draft' : p.tiktok?.privacy || 'PUBLIC_TO_EVERYONE';
+      acts.push(`<select class="input tt-mode" title="ตั้งค่า TikTok ของโพสต์นี้" onchange="setTikTokMode('${p.id}', this.value)">${TT_MODES.map(([v, l]) =>
+        `<option value="${v}" ${v === cur ? 'selected' : ''}>♪ ${l}</option>`).join('')}</select>`);
+    }
     if (['failed', 'partial'].includes(p.status)) acts.push(`<button class="btn btn-primary btn-sm" onclick="postAction('${p.id}','retry')">ลองใหม่ (ที่ล้มเหลว)</button>`);
     acts.push(`<button class="btn btn-outline btn-sm" onclick="reusePost('${p.id}')">ใช้ซ้ำ</button>`);
     if (!['running', 'queued'].includes(p.status)) acts.push(`<button class="btn btn-outline btn-sm txt-danger" onclick="deletePost('${p.id}')">ลบ</button>`);
@@ -836,6 +842,18 @@ $$('#postTbl thead th[data-key]').forEach(th => th.addEventListener('click', () 
   else { sortState.key = th.dataset.key; sortState.dir = th.dataset.type === 'date' ? 'desc' : 'asc'; }
   renderPosts();
 }));
+const TT_MODES = [
+  ['draft', 'ส่งเป็นดราฟต์'],
+  ['PUBLIC_TO_EVERYONE', 'สาธารณะ'],
+  ['FOLLOWER_OF_CREATOR', 'ผู้ติดตาม'],
+  ['MUTUAL_FOLLOW_FRIENDS', 'เพื่อน'],
+  ['SELF_ONLY', 'เฉพาะฉัน'],
+];
+async function setTikTokMode(id, value) {
+  const tiktok = value === 'draft' ? { mode: 'draft' } : { mode: 'direct', privacy: value };
+  try { await api(`/api/posts/${id}`, { method: 'PATCH', json: { tiktok } }); await loadPosts(); showToast('อัปเดตตั้งค่า TikTok ของโพสต์นี้แล้ว ✓', 'success'); }
+  catch (e) { showToast(e.message, 'error'); await loadPosts(); }
+}
 async function postAction(id, action) {
   try { await api(`/api/posts/${id}/${action}`, { method: 'POST', json: {} }); showToast('เริ่มโพสต์แล้ว', 'success'); await loadPosts(); }
   catch (e) { showToast(e.message, 'error'); }

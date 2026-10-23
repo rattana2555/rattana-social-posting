@@ -285,6 +285,22 @@ function findPost(id) {
   return db.posts.find(p => p.id === id) || fail('ไม่พบโพสต์');
 }
 
+// Only posts still waiting to go out can be edited
+app.patch('/api/posts/:id', (req, res) => {
+  const post = findPost(req.params.id);
+  if (!['scheduled', 'missed'].includes(post.status) || isRunning(post.id)) fail('แก้ได้เฉพาะโพสต์ที่ยังรอโพสต์อยู่');
+  const t = req.body.tiktok;
+  if (t) {
+    post.tiktok = {
+      mode: t.mode === 'draft' ? 'draft' : 'direct',
+      privacy: String(t.privacy || post.tiktok?.privacy || 'PUBLIC_TO_EVERYONE'),
+      disableComment: typeof t.disableComment === 'boolean' ? t.disableComment : !!post.tiktok?.disableComment,
+    };
+  }
+  save();
+  res.json(publicPost(post));
+});
+
 app.post('/api/posts/:id/retry', (req, res) => {
   const post = findPost(req.params.id);
   if (isRunning(post.id)) fail('โพสต์นี้กำลังทำงานอยู่');
