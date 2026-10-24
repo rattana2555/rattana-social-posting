@@ -9,7 +9,10 @@ import * as tt from './lib/tiktok.js';
 import * as line from './lib/line.js';
 import * as tunnel from './lib/tunnel.js';
 import { hasFfmpeg, probeDuration } from './lib/media.js';
-import { runPost, isRunning, recoverOnStartup, duePosts, hasPostWithin, online, deleteMediaFiles, tiktokToken, mediaPath } from './lib/publisher.js';
+import {
+  runPost, isRunning, recoverOnStartup, duePosts, hasPostWithin, online, deleteMediaFiles, tiktokToken, mediaPath,
+  scheduleOnPlatforms, cancelOnPlatforms,
+} from './lib/publisher.js';
 import { keepAwake } from './lib/awake.js';
 
 const REDIRECT = {
@@ -308,7 +311,8 @@ app.post('/api/posts', upload.array('files', 10), async (req, res) => {
     };
     db.posts.push(post);
     save();
-    if (!scheduledAt) runPost(post);
+    if (scheduledAt) scheduleOnPlatforms(post);
+    else runPost(post);
     res.json(publicPost(post));
   } catch (e) {
     for (const f of files) fs.rmSync(f.path, { force: true });
@@ -345,20 +349,28 @@ app.patch('/api/posts/:id', (req, res) => {
 app.post('/api/posts/:id/retry', (req, res) => {
   const post = findPost(req.params.id);
   if (isRunning(post.id)) fail('โพสต์นี้กำลังทำงานอยู่');
-  runPost(post, { onlyFailed: true });
-  res.json({ ok: true });
-});
-
-app.post('/api/posts/:id/run-now', (req, res) => {
-  const post = findPost(req.params.id);
-  if (!['scheduled', 'missed'].includes(post.status)) fail('โพสต์นี้ไม่ได้อยู่ในสถานะรอโพสต์');
   runPost(post);
   res.json({ ok: true });
 });
 
-app.delete('/api/posts/:id', (req, res) => {
+const cancelOrFail = post => cancelOnPlatforms(post).catch(e => {
+  throw new UserError(`ยกเลิกโพสต์ที่ตั้งเวลาไว้บน Facebook ไม่สำเร็จ: ${e.message}`);
+});
+
+app.post('/api/posts/:id/run-now', async (req, res) => {
+  const post = findPost(req.params.id);
+  if (!['scheduled', 'missed'].includes(post.status)) fail('โพสต์นี้ไม่ได้อยู่ในสถานะรอโพสต์');
+  if (isRunning(post.id)) fail('โพสต์นี้กำลังอัปโหลดอยู่ รอสักครู่');
+  // Take back the copy Facebook is holding, otherwise the page would get it twice
+  await cancelOrFail(post);
+  runPost(post);
+  res.json({ ok: true });
+});
+
+app.delete('/api/posts/:id', async (req, res) => {
   const post = findPost(req.params.id);
   if (isRunning(post.id)) fail('โพสต์นี้กำลังทำงานอยู่ ลบไม่ได้');
+  await cancelOrFail(post);
   deleteMediaFiles(post);
   db.posts = db.posts.filter(p => p.id !== post.id);
   save();

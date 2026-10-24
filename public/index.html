@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Rattana Social Posting v1.2</title>
+<title>Rattana Social Posting v1.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -222,7 +222,7 @@ code{font-family:Consolas,monospace;font-size:12px;background:rgba(201,168,76,.1
 <div class="topbar">
 <header>
   <div class="logo-mark">R</div>
-  <div class="logo-text">RATTANA <span>SOCIAL</span><span class="ver">v1.2</span></div>
+  <div class="logo-text">RATTANA <span>SOCIAL</span><span class="ver">v1.3</span></div>
   <div class="hdr-sp"></div>
   <div class="status-pill" id="statusPill" onclick="switchTab('settings')">…</div>
   <button class="icon-btn" id="btnRefresh" title="รีเฟรช" onclick="refreshData()">⟳</button>
@@ -465,7 +465,7 @@ const STATUS = {
   failed:    ['ล้มเหลว', 'badge-danger'],
   missed:    ['พลาดเวลา', 'badge-danger'],
 };
-const RESULT_ICON = { pending: '⏳', running: '🔄', success: '✅', failed: '❌' };
+const RESULT_ICON = { pending: '⏳', running: '🔄', success: '✅', failed: '❌', scheduled: '🗓️' };
 const MB = 1024 * 1024;
 
 const state = { accounts: [], posts: [], status: {}, settings: {}, files: [], selected: new Set(), postFilter: 'all', search: '', creators: {}, ttAcc: {} };
@@ -685,7 +685,7 @@ function onWhenChange() {
     $('#scheduleAt').value = new Date(d - d.getTimezoneOffset() * 60e3).toISOString().slice(0, 16);
   }
   const v = $('#scheduleAt').value;
-  $('#scheduleTh').textContent = v ? `จะโพสต์วันที่ ${formatThaiDate(v)} เวลา ${formatThaiTime(v)} น. — ต้องเปิดแอปนี้ค้างไว้จนถึงเวลานั้น` : '';
+  $('#scheduleTh').textContent = v ? `จะโพสต์วันที่ ${formatThaiDate(v)} เวลา ${formatThaiTime(v)} น.` : '';
   $('#btnSubmit').textContent = isLater() ? '⏰ ตั้งเวลาโพสต์' : '🚀 โพสต์เลย';
   renderIssues();
 }
@@ -818,6 +818,14 @@ function computeIssues() {
   if (isLater()) {
     const v = $('#scheduleAt').value;
     if (!v || new Date(v) <= new Date()) errs.push('เลือกเวลาโพสต์ที่เป็นอนาคต');
+    const lead = new Date(v) - new Date();
+    // Matches the server: Facebook takes posts 10 minutes to 30 days ahead and then publishes them itself
+    if (plats.has('facebook')) {
+      if (lead > 11 * 60e3 && lead < 29 * 24 * 3600e3) warns.push('Facebook: จะส่งไปตั้งเวลาไว้บน Facebook ทันที — Facebook โพสต์เองตามเวลา ปิดคอมได้');
+      else if (lead > 0) warns.push('Facebook: เวลาที่ตั้งใกล้เกินไป (น้อยกว่า 11 นาที) หรือไกลเกิน 29 วัน — แอปจะโพสต์ให้เองเมื่อถึงเวลา ต้องเปิดคอมไว้');
+    }
+    const needPc = ['tiktok', 'line'].filter(p => plats.has(p)).map(p => PLATFORMS[p].label);
+    if (needPc.length) warns.push(`${needPc.join(' และ ')}: ไม่มีระบบตั้งเวลาให้แอปภายนอกใช้ — ต้องเปิดคอมและแอปนี้ไว้ตอนถึงเวลา (แอปกันคอมหลับให้แล้ว แต่ห้ามปิดเครื่อง / สั่ง Sleep / ปิดฝาโน้ตบุ๊ก)`);
   }
   return { errs, warns };
 }
@@ -988,7 +996,12 @@ async function postAction(id, action) {
   catch (e) { showToast(e.message, 'error'); }
 }
 async function deletePost(id) {
-  if (!confirm('ลบโพสต์นี้ออกจากประวัติ?\n(ไม่ได้ลบโพสต์ที่ขึ้นไปแล้วบน Facebook / TikTok / LINE)')) return;
+  const p = state.posts.find(x => x.id === id);
+  const fbHeld = p && Date.parse(p.scheduledAt) > Date.now() && Object.values(p.results).some(r => r.status === 'scheduled');
+  const msg = fbHeld
+    ? 'ลบโพสต์นี้?\nโพสต์ที่ตั้งเวลาไว้บน Facebook จะถูกยกเลิกด้วย'
+    : 'ลบโพสต์นี้ออกจากประวัติ?\n(ไม่ได้ลบโพสต์ที่ขึ้นไปแล้วบน Facebook / TikTok / LINE)';
+  if (!confirm(msg)) return;
   try { await api(`/api/posts/${id}`, { method: 'DELETE' }); await loadPosts(); showToast('ลบแล้ว', 'success'); }
   catch (e) { showToast(e.message, 'error'); }
 }

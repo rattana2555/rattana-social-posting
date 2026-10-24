@@ -1,4 +1,4 @@
-# Rattana Social Posting v1.2
+# Rattana Social Posting v1.3
 
 โพสต์ครั้งเดียว ลงได้หลายแพลตฟอร์ม หลายบัญชีพร้อมกัน
 
