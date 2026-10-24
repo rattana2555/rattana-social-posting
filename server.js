@@ -9,7 +9,8 @@ import * as tt from './lib/tiktok.js';
 import * as line from './lib/line.js';
 import * as tunnel from './lib/tunnel.js';
 import { hasFfmpeg, probeDuration } from './lib/media.js';
-import { runPost, isRunning, recoverOnStartup, duePosts, deleteMediaFiles, tiktokToken, mediaPath } from './lib/publisher.js';
+import { runPost, isRunning, recoverOnStartup, duePosts, hasPostWithin, online, deleteMediaFiles, tiktokToken, mediaPath } from './lib/publisher.js';
+import { keepAwake } from './lib/awake.js';
 
 const REDIRECT = {
   facebook: `${BASE_URL}/auth/facebook/callback`,
@@ -401,6 +402,22 @@ if (!db.settings.publicBaseUrl) {
     : '  ⚠ ไม่ได้เปิด tunnel (ไม่พบ cloudflared) — LINE จะส่งได้เฉพาะข้อความ'));
 }
 
-setInterval(() => duePosts().forEach(p => runPost(p)), 15000);
+let lastTick = Date.now();
+let checking = false;
+setInterval(async () => {
+  const t = Date.now();
+  if (t - lastTick > 60e3) console.log(`  ${new Date().toLocaleString('th-TH')} เครื่องเพิ่งตื่นจากโหมดพัก — เช็กโพสต์ที่ถึงเวลา`);
+  lastTick = t;
+  // Idle sleep can start hours before the post time, so stay awake for as long as anything is scheduled
+  keepAwake(hasPostWithin(Infinity));
+  if (checking || !duePosts().length) return;
+  checking = true;
+  try {
+    if (!(await online())) return console.log('  ยังไม่มีอินเทอร์เน็ต — รอแล้วลองใหม่ (เกิน 1 ชม. จะขึ้น "พลาดเวลา")');
+    duePosts().forEach(p => runPost(p));
+  } finally {
+    checking = false;
+  }
+}, 15000);
 
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { tunnel.stopTunnel(); process.exit(0); });
